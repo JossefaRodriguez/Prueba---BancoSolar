@@ -30,7 +30,6 @@ const servidor = http.createServer(async (req, res) => {
             res.statusCode = 500
             res.end(`message: ${error}`)
         }
-
     }
     else if (urlb.startsWith('/usuarios') && method === 'GET') {
         try {
@@ -66,19 +65,49 @@ const servidor = http.createServer(async (req, res) => {
         }
     }
     else if (urlb.startsWith('/usuario') && method === 'DELETE') {
-        res.setHeader('Content-Type', 'application/json')
-        res.statusCode = 200
-        res.end('{}')
+        try {
+            const id = url.parse(urlb, true).query
+            const resp = await consults.eliminarUsuario(id.id)
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 200
+            res.end(JSON.stringify(resp))
+        } catch (error) {
+            res.statusCode = 500
+            res.end(`message: ${error}`)
+        }
+
     }
     else if (urlb === '/transferencia' && method === 'POST') {
-        res.setHeader('Content-Type', 'application/json')
-        res.statusCode = 200
-        res.end('{}')
+        try {
+            let body
+            req.on('data', (chunk) => {
+                body = chunk.toString()
+            })
+            req.on('end', async () => {
+                const datos = JSON.parse(body)
+                const fecha = new Date()
+                const resp = await consults.insertTransferencias(datos.emisor, datos.receptor, datos.monto, fecha)
+                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = 201
+                res.end(JSON.stringify(resp))
+            })
+        } catch (error) {
+            res.statusCode = 500
+            res.end(`message: ${error}`)
+        }
     }
     else if (urlb === '/transferencias' && method === 'GET') {
-        res.setHeader('Content-Type', 'application/json')
-        res.statusCode = 200
-        res.end('{}')
+        try {
+            const resp = await consults.obtenerTransferencias()
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 200
+            res.end(JSON.stringify(resp))
+
+        } catch (error) {
+            res.statusCode = 500
+            res.end(`message: ${error}`)
+        }
+
     }
     else {
         res.setHeader('Content-Type', 'application/json')

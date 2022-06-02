@@ -15,7 +15,7 @@ const conexion = () => {
     return new Promise((resolve, reject) => {
         pool.connect((errorConexion, client, release) => {
             if(errorConexion) {
-                reject('Error, favor revisar siguiente código' + errorConexion.code)
+                reject('Error, favor revisar siguiente código: ' + errorConexion.code)
             } else {
                 const cnx = {
                     client, release, pool
@@ -23,6 +23,8 @@ const conexion = () => {
                 resolve(cnx)
             }
         })
+    }).catch((error) => {
+        console.log(error)
     })
 }
 

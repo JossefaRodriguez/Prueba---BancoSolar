@@ -244,9 +244,9 @@
       const response = await fetch("http://localhost:3000/transferencia", {
         method: "post",
         body: JSON.stringify({
-          emisor: Number.parseINT(emisor),
-          receptor: Number.parseINT(receptor),
-          monto: Number.parseINT(monto),
+          emisor: Number.parseInt(emisor),
+          receptor: Number.parseInt(receptor),
+          monto: Number.parseInt(monto),
         }),
       });
       const data = await response.json();
