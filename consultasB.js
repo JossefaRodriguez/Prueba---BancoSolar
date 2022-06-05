@@ -16,7 +16,6 @@ const consultasB = async () => {
             console.error(err)
         }
         cnx.release()
-        cnx.pool.end()
 
     }
     // METODO obtener todos los usuarios 
@@ -31,7 +30,6 @@ const consultasB = async () => {
             console.error(err)
         }
         cnx.release()
-        cnx.pool.end()
 
     }
     // METODO Modificar usuarios
@@ -47,8 +45,6 @@ const consultasB = async () => {
             console.error(err)
         }
         cnx.release()
-        cnx.pool.end()
-
     }
     // METODO eliminar usuarios
     const eliminarUsuario = async (id) => {
@@ -57,14 +53,16 @@ const consultasB = async () => {
             values: [id]
         }
         try {
-            const datos = await cnx.client.query(SQLQuery)
-            return datos
+            await cnx.client.query(SQLQuery, (errorConsulta) => {
+                if (errorConsulta) {
+                    console.error('No se pudo eliminar el usuario')
+                }
+            })
         }
         catch (err) {
             console.error(err)
         }
         cnx.release()
-        cnx.pool.end()
     }
 
     // TRANSFERENCIAS 
@@ -75,22 +73,42 @@ const consultasB = async () => {
                 text: 'INSERT INTO transferencias(emisor, receptor, monto, fecha) VALUES ($1, $2, $3, $4) RETURNING *',
                 values: [emisor, receptor, monto, fecha]
             }
+            const SQLQueryDescontar = {
+                text: 'UPDATE usuarios SET balance = balance - $1 WHERE id = $2 RETURNING *',
+                values: [monto, emisor]
+            }
+            const SQLQueryAumentar = {
+                text: 'UPDATE usuarios SET balance = balance + $1 WHERE id = $2 RETURNING *',
+                values: [monto, receptor]
+            }
             await cnx.client.query('BEGIN')
-           const resp = await cnx.client.query(SQLQuery)
+            const resp = await cnx.client.query(SQLQuery)
+            await cnx.client.query(SQLQueryDescontar),
+            await cnx.client.query(SQLQueryAumentar)
             await cnx.client.query('COMMIT')
-            return(resp.rows)
+            cnx.release()
+            return (resp.rows)
+
         }
         catch (err) {
             await cnx.client.query('ROLLBACK')
-            console.error(err)
+            console.error(`error código: ${err.code}`)
+            console.log(`Detalle del error: ${err.detail}`)
+            console.log(`Tabla originaria del error: ${err.table}`)
+            console.log(`Restricción violada en el campo: ${err.constraint}`)
+            cnx.release()
+            return []
         }
-        cnx.release()
-        cnx.pool.end()
+
     }
 
     const obtenerTransferencias = async () => {
         const SQLQuery = {
-            text: 'SELECT t.id, t.monto, u.nombre AS emisor, us.nombre AS receptor, t.fecha FROM transferencias t INNER JOIN usuarios u ON t.emisor = u.id INNER JOIN usuarios us ON t.receptor = us.id',
+            text: `SELECT t.id, u.nombre AS emisor, us.nombre AS receptor, t.monto, t.fecha 
+                FROM transferencias t 
+                INNER JOIN usuarios u ON t.emisor = u.id 
+                INNER JOIN usuarios us ON t.receptor = us.id`,
+            rowMode: 'array'
         }
         try {
             const datos = await cnx.client.query(SQLQuery)
@@ -99,8 +117,6 @@ const consultasB = async () => {
             console.error(err)
         }
         cnx.release()
-        cnx.pool.end()
-
     }
 
     return { insertarUsuario, obtenerUsuarios, modificarUsuario, eliminarUsuario, insertTransferencias, obtenerTransferencias }

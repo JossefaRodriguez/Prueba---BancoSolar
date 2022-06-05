@@ -28,7 +28,7 @@ const servidor = http.createServer(async (req, res) => {
             })
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            res.end(`{message: ${error}}`)
         }
     }
     else if (urlb.startsWith('/usuarios') && method === 'GET') {
@@ -40,7 +40,7 @@ const servidor = http.createServer(async (req, res) => {
 
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            res.end(`{message: ${error}}`)
         }
 
     }
@@ -61,7 +61,7 @@ const servidor = http.createServer(async (req, res) => {
             })
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            res.end(`{message: ${error}}`)
         }
     }
     else if (urlb.startsWith('/usuario') && method === 'DELETE') {
@@ -73,7 +73,7 @@ const servidor = http.createServer(async (req, res) => {
             res.end(JSON.stringify(resp))
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            res.end(`{message: ${error}}`)
         }
 
     }
@@ -86,14 +86,23 @@ const servidor = http.createServer(async (req, res) => {
             req.on('end', async () => {
                 const datos = JSON.parse(body)
                 const fecha = new Date()
-                const resp = await consults.insertTransferencias(datos.emisor, datos.receptor, datos.monto, fecha)
-                res.setHeader('Content-Type', 'application/json')
-                res.statusCode = 201
-                res.end(JSON.stringify(resp))
+                const resp = await consults.insertTransferencias(datos.emisor, datos.receptor, datos.monto, fecha)    
+               
+                if(resp.length > 0)  {    
+                    res.setHeader('Content-Type', 'application/json')                
+                    res.statusCode = 500
+                    res.end(`{message: no se pudo realizar la transferencia}`)
+                } else{
+                    res.setHeader('Content-Type', 'application/json')
+                    res.statusCode = 201
+                    res.end(JSON.stringify(resp))
+                }   
+                
             })
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            console.log(`message: ${error}}`)
+            res.end(`{message: ${error}}`)
         }
     }
     else if (urlb === '/transferencias' && method === 'GET') {
@@ -105,7 +114,7 @@ const servidor = http.createServer(async (req, res) => {
 
         } catch (error) {
             res.statusCode = 500
-            res.end(`message: ${error}`)
+            res.end(`{message: ${error}}`)
         }
 
     }

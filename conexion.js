@@ -11,10 +11,10 @@ const config = {
 const pool = new Pool(config)
 
 const conexion = () => {
-    
+
     return new Promise((resolve, reject) => {
         pool.connect((errorConexion, client, release) => {
-            if(errorConexion) {
+            if (errorConexion) {
                 reject('Error, favor revisar siguiente código: ' + errorConexion.code)
             } else {
                 const cnx = {
